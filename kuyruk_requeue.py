@@ -5,12 +5,18 @@ import socket
 import traceback
 from datetime import datetime
 
+import amqp
 import redis
 
 from kuyruk import signals
 
 
-CONFIG_KEYS = ["REDIS_HOST", "REDIS_PORT", "REDIS_DB", "REDIS_PASSWORD"]
+CONFIG = {
+    "REDIS_HOST": "localhost",
+    "REDIS_PORT": 6379,
+    "REDIS_DB": 0,
+    "REDIS_PASSWORD": None,
+}
 
 REDIS_KEY = "failed_tasks"
 
@@ -18,6 +24,7 @@ REDIS_KEY = "failed_tasks"
 class Requeue(object):
 
     def __init__(self, kuyruk):
+        self.kuyruk = kuyruk
         self.redis = redis.StrictRedis(
             host=kuyruk.config.REDIS_HOST,
             port=kuyruk.config.REDIS_PORT,
@@ -41,3 +48,35 @@ class Requeue(object):
         }
 
         self.redis.hset(REDIS_KEY, description['id'], json.dumps(failure))
+
+    def requeue_failed_tasks(self):
+        tasks = self.redis.hvals(REDIS_KEY)
+        with self.kuyruk.channel() as channel:
+            for task in tasks:
+                task = json.loads(task)
+                print "Requeueing task: %r" % task
+                _requeue_failed_task(task, channel, self.redis)
+        print "%i failed tasks have been requeued." % len(tasks)
+
+
+def _requeue_failed_task(failed, channel, redis):
+        description = failed['description']
+        queue_name = failed['worker_queue']
+        count = description.get('requeue_count', 0)
+        description['requeue_count'] = count + 1
+        body = json.dumps(description)
+        msg = amqp.Message(body=body)
+        channel.queue_declare(queue_name, durable=True, auto_delete=False)
+        channel.basic_publish(msg, exchange="", routing_key=queue_name)
+        redis.hdel(REDIS_KEY, description['id'])
+
+
+def requeue(config, args):
+    from kuyruk import Kuyruk
+    k = Kuyruk(config)
+    r = Requeue(k)
+    r.requeue_failed_tasks()
+
+help_text = "requeue failed tasks"
+
+command = (requeue, help_text, None)

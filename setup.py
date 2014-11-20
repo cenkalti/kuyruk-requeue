@@ -13,7 +13,7 @@ setup(
         'kuyruk>=2.0.0',
         'redis>=2.10.3',
     ],
-    entry_points={'kuyruk.config': 'requeue = kuyruk_requeue:CONFIG_KEYS',
+    entry_points={'kuyruk.config': 'requeue = kuyruk_requeue:CONFIG',
                   'kuyruk.commands': 'requeue = kuyruk_requeue:command'},
     description='Save failed tasks to Redis and requeue them.',
     long_description=open('README.md').read(),
