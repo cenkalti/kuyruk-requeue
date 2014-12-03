@@ -29,4 +29,4 @@ def oops():
 
 Run the command to requeue saved tasks:
 
-    $ kuyruk --config ... requeue
+    $ kuyruk --app ... requeue
