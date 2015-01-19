@@ -71,10 +71,8 @@ def _requeue_failed_task(failed, channel, redis):
         redis.hdel(REDIS_KEY, description['id'])
 
 
-def requeue(config, args):
-    from kuyruk import Kuyruk
-    k = Kuyruk(config)
-    r = Requeue(k)
+def requeue(kuyruk, args):
+    r = Requeue(kuyruk)
     r.requeue_failed_tasks()
 
 help_text = "requeue failed tasks"

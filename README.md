@@ -13,14 +13,14 @@ from kuyruk import Kuyruk, Config
 from kuyruk_requeue import Requeue
 
 config = Config()
-config.KUYRUK_REDIS_HOST = "localhost"
-config.KUYRUK_REDIS_PORT = 6379
-config.KUYRUK_REDIS_DB = 0
-config.KUYRUK_REDIS_PASSWORD = None
+config.REDIS_HOST = "localhost"
+config.REDIS_PORT = 6379
+config.REDIS_DB = 0
+config.REDIS_PASSWORD = None
 
 kuyruk = kuyruk.Kuyruk(config)
 
-s = Requeue(k)
+Requeue(kuyruk)
 
 @kuyruk.task
 def oops():
