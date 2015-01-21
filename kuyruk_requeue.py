@@ -25,13 +25,19 @@ class Requeue(object):
 
     def __init__(self, kuyruk):
         self.kuyruk = kuyruk
+        self.kuyruk.extensions["requeue"] = self
         self.redis = redis.StrictRedis(
             host=kuyruk.config.REDIS_HOST,
             port=kuyruk.config.REDIS_PORT,
             db=kuyruk.config.REDIS_DB,
             password=kuyruk.config.REDIS_PASSWORD)
-        signals.worker_failure.connect(self._handle_failure,
-                                       sender=kuyruk, weak=False)
+
+        if "sentry" in kuyruk.extensions:
+            sig = kuyruk.extensions["sentry"].on_exception
+        else:
+            sig = signals.worker_failure
+
+        sig.connect(self._handle_failure, sender=kuyruk, weak=False)
 
     def _handle_failure(self, sender, description, task, args, kwargs,
                         exc_info, worker):
@@ -55,8 +61,15 @@ class Requeue(object):
             for task in tasks:
                 task = json.loads(task)
                 print "Requeueing task: %r" % task
-                _requeue_failed_task(task, channel, self.redis)
+                self.requeue_task(task, channel=channel)
         print "%i failed tasks have been requeued." % len(tasks)
+
+    def requeue_task(self, failed, channel=None):
+        if channel:
+            _requeue_failed_task(failed, channel, self.redis)
+        else:
+            with self.kuyruk.channel() as channel:
+                _requeue_failed_task(failed, channel, self.redis)
 
 
 def _requeue_failed_task(failed, channel, redis):
