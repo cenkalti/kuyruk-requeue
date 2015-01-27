@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='Kuyruk-Requeue',
-    version="1.1.0",
+    version="1.1.1",
     author=u'Cenk Altı',
     author_email='cenkalti@gmail.com',
     keywords='kuyruk requeue',

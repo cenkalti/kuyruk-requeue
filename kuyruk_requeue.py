@@ -39,8 +39,8 @@ class Requeue(object):
 
         sig.connect(self._handle_failure, sender=kuyruk, weak=False)
 
-    def _handle_failure(self, sender, description, task, args, kwargs,
-                        exc_info, worker):
+    def _handle_failure(self, sender, description=None, task=None,
+                        args=None, kwargs=None, exc_info=None, worker=None):
         failure = {
             "description": description,
             "worker_queue": worker.queue,
