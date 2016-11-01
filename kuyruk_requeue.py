@@ -43,7 +43,7 @@ class Requeue(object):
                         args=None, kwargs=None, exc_info=None, worker=None):
         failure = {
             "description": description,
-            "worker_queue": worker.queue,
+            "worker_queues": worker.queues,
             "worker_hostname": socket.gethostname(),
             "worker_pid": os.getpid(),
             "worker_cmd": ' '.join(sys.argv),
@@ -74,7 +74,7 @@ class Requeue(object):
 
 def _requeue_failed_task(failed, channel, redis):
         description = failed['description']
-        queue_name = failed['worker_queue']
+        queue_name = description['queue']
         count = description.get('requeue_count', 0)
         description['requeue_count'] = count + 1
         body = json.dumps(description)
