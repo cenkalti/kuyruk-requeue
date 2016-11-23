@@ -40,10 +40,11 @@ class Requeue(object):
         sig.connect(self._handle_failure, sender=kuyruk, weak=False)
 
     def _handle_failure(self, sender, description=None, task=None,
-                        args=None, kwargs=None, exc_info=None, worker=None):
+                        args=None, kwargs=None, exc_info=None, worker=None,
+                        queue=None, **extra):
         failure = {
             "description": description,
-            "worker_queues": worker.queues,
+            "queue": queue,
             "worker_hostname": socket.gethostname(),
             "worker_pid": os.getpid(),
             "worker_cmd": ' '.join(sys.argv),
@@ -74,7 +75,7 @@ class Requeue(object):
 
 def _requeue_failed_task(failed, channel, redis):
         description = failed['description']
-        queue_name = description['queue']
+        queue_name = failed['queue']
         count = description.get('requeue_count', 0)
         description['requeue_count'] = count + 1
         body = json.dumps(description)
@@ -87,6 +88,7 @@ def _requeue_failed_task(failed, channel, redis):
 def requeue(kuyruk, args):
     r = Requeue(kuyruk)
     r.requeue_failed_tasks()
+
 
 help_text = "requeue failed tasks"
 
