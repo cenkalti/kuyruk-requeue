@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import socket
+import logging
 import traceback
 from datetime import datetime
 
@@ -19,6 +20,8 @@ CONFIG = {
 }
 
 REDIS_KEY = "failed_tasks"
+
+logger = logging.getLogger(__name__)
 
 
 class Requeue(object):
@@ -61,9 +64,9 @@ class Requeue(object):
         with self.kuyruk.channel() as channel:
             for task in tasks:
                 task = json.loads(task)
-                print "Requeueing task: %r" % task
+                logger.info("Requeueing task: %r", task)
                 self.requeue_task(task, channel=channel)
-        print "%i failed tasks have been requeued." % len(tasks)
+        logger.info("%i failed tasks have been requeued.", len(tasks))
 
     def requeue_task(self, failed, channel=None):
         if channel:
