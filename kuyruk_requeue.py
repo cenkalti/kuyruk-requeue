@@ -63,6 +63,7 @@ class Requeue(object):
         tasks = self.redis.hvals(REDIS_KEY)
         with self.kuyruk.channel() as channel:
             for task in tasks:
+                task = task.decode('utf-8')
                 task = json.loads(task)
                 logger.info("Requeueing task: %r", task)
                 self.requeue_task(task, channel=channel)
